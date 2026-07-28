@@ -1,8 +1,8 @@
 import Octet from "./Octet";
 import Netmask from "./Netmask";
 import SubnetNumbersInput from "./SubnetNumbersInput";
-import React, { useState } from "react";
-import { IPv4 } from "./lib/ipv4";
+import React, {useState} from "react";
+import {IPv4} from "./lib/ipv4";
 import "./IPv4Addr.css";
 
 const IPv4Addr = (props) => {
@@ -37,7 +37,7 @@ const IPv4Addr = (props) => {
       netmasksElements.push(
         <div key={`networkAddress-${index}`}>
           {e.networkAddress}/{e.netmask} ({e.count} hosts)
-        </div>
+        </div>,
       );
     });
     return netmasksElements;
@@ -110,7 +110,7 @@ const IPv4Addr = (props) => {
             <span>{ipv4.availableCount()}</span>
           </div>
           <div>
-            <strong>Usable addresses(AWS):</strong>
+            <strong>Usable addresses - EDITED HERE (AWS):</strong>
             <span>{ipv4.availableCount(5)}</span>
           </div>
         </div>
