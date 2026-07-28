@@ -1,0 +1,66 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - devel
+      - stage
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "15"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
+
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: ${{ secrets.ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v4
+
+      - name: Terraform init
+        working-directory: terraform/${{ github.ref_name }}
+        run: terraform init
+
+      - name: Terraform apply
+        working-directory: terraform/${{ github.ref_name }}
+        run: terraform apply -auto-approve -var aws_region=${{ secrets.AWS_REGION }} -var application_name="jz-test-81273817" -var environment=${{ github.ref_name }}
+
+      - name: Copy index.html to s3
+        working-directory: terraform/${{ github.ref_name }}
+        run: aws s3 sync ../../build s3://$(terraform output -raw bucket_name)/
