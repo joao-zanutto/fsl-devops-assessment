@@ -1,0 +1,28 @@
+name: Branch Gating
+
+on:
+  pull_request:
+    branches:
+      - devel
+      - stage
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if merging into 'stage' from branch other than 'devel'
+        if: github.base_ref == 'stage' && github.head_ref != 'devel'
+        run: |
+          echo "ERROR:Trying to merge into 'stage' from branch different than 'devel'"
+          exit 1
+
+      - name: Check if merging into 'devel' from branches other than 'bugfix/*' or 'feature/*'
+        if: github.base_ref == 'devel' && ! (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'bugfix/') )
+        run: |
+          echo "ERROR:Trying to merge into 'devel' from branches different than 'bugfix/*' or 'feature/*"
+          exit 1
